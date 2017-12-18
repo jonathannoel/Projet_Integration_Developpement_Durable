@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #
-# AUTEUR : NOËL Jonathan
+# AUTEURS : NOËL Jonathan, LAGACHE Jordan
 # 
 # COLLABORATEURS : 
-#   LAGACHE Jordan, MEYER Nathan, EEROLA Juhani, MUTEBA Jean-Luc, RENARD Arnaud
+#   MEYER Nathan, EEROLA Juhani, MUTEBA Jean-Luc, RENARD Arnaud
 #
 #
 # Dans le cadre du Projet d intégration organisé par l EPHEC-Louvain-la-Neuve
@@ -141,7 +141,7 @@ do
 			inputfile="output-$DATE.txt"
 			cat $inputfile | while read compteur nom heure; do
 				echo "INSERT INTO Control (Me_id, Mod_id, Con_measure, Con_time, Con_image) VALUES ('$meter_id', '$module_id', '$compteur', '$heure', '$imageATraiter');"
-			done | mysql -h 137.74.172.37 -ujon -proot emonitor;
+			done | mysql -h IpDeVotreBDD -uUtilisateur -pMotDePasse BaseDeDonnées;
 
 			# DEPLACEMENT DES FICHIERS DANS UN DOSSIER D'ARCHIVAGE
 			mv output-$DATE.txt Archives/$DATE.txt
