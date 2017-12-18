@@ -45,6 +45,9 @@ apt-get install -y python-imaging
 # VERIFICATION ET INSTALLATION DU DRIVER CV2
 apt-get install -y python-opencv
 
+# VERIFICATION ET INSTALLATION DE BC (NECESSAIRE OTSUTHRESH)
+apt-get install -y bc
+
 # MISE A NIVEAU DU SYSTEME
 apt-get -y update
 apt-get -y upgrade
@@ -95,9 +98,9 @@ do
 	imageATraiter=$(base64 /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/captureWebcamCrop.jpg)
 	sleep 1
 	convert /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/captureWebcamCrop.jpg -resize 300 -colorspace Gray -density 300 -depth 8 -negate -strip -background white -alpha off /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/out-$DATE.tif
-
+	sleep 1
 	./home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/otsuthresh /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/out-$DATE.tif /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/out-$DATE.tif
-
+	sleep 2
 
 	# GENERATION DU NUMERO DE COMPTEUR
 	# Premier essai fonctionnel
@@ -121,12 +124,14 @@ do
 
 	if [ "$valeurActuelle" -gt "$valeurPrecedente" ]
 	then		
-		if [ $((valeurPrecedente + valeurEcartMax)) -lt "$valeurActuelle" ]
+		if [ "$valeurPrecedente" -eq 0 ]
+		then 
+			valeurPrecedente="$valeurActuelle"
+		elif [ $((valeurPrecedente + valeurEcartMax)) -gt "$valeurActuelle" || "$valeurPrecedente" == "$valeurActuelle" ]
 		then 
 			# REMPLACER LA VALEUR PRECEDENTE PAR L'ACTUELLE
-			valeurPrecedente=$valeurActuelle
+			valeurPrecedente="$valeurActuelle"
 	
-
 			# NOTER LE NOM DU LOCATAIRE (ON NOMME LA MACHINE A SON NOM)	
 			echo " $hostname" >> /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt
 			# NOTER LA DATE-HEURE DE LA PRISE
@@ -161,10 +166,9 @@ do
 		sleep 5	
 	fi
 	
-
 	# POUR QUITTER LE LOGICIEL
 	read -t 2 -p "\nStopper le logiciel ? " -e -i "1" RDVALUE
-	if [ $RDVALUE = "1" ]
+	if [ $RDVALUE -eq "1" ]
 	then 
 		echo "Logiciel quitté"
 		exit 0
