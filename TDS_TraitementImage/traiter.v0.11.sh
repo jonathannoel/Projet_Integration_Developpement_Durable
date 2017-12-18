@@ -75,36 +75,6 @@ echo "Module ID = ----------------->   $module_id"
 valeurPrecedente=0
 valeurEcartMax=10
 
-envoiBaseDeDonnee() {
-	# REMPLACER LA VALEUR PRECEDENTE PAR L'ACTUELLE
-	valeurPrecedente="$valeurActuelle"
-
-	# NOTER LE NOM DU LOCATAIRE (ON NOMME LA MACHINE A SON NOM)	
-	echo " $hostname" >> /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt
-	# NOTER LA DATE-HEURE DE LA PRISE
-	echo " $DATE" >> /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt
-
-	# GESTION DES ESPACES INUTILES / FACILITER POUR INSERT BDD
-	contenuFichier="$(cat /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt)"
-	contenuFichierSansEspaces="$(echo -e $contenuFichier | tr -d '\v')"
-	echo $contenuFichierSansEspaces > /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt
-	cat /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt
-
-	# INSERTION DES DONNEES DANS LA BDD
-	inputfile="/home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt"
-	cat $inputfile >> "/home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/backupFile.txt"
-	cat $inputfile | while read compteur nom heure; do
-		echo "INSERT INTO Control (Me_id, Mod_id, Con_measure, Con_time, Con_image) VALUES ('$meter_id', '$module_id', '$compteur', '$heure', '$imageATraiter');"
-	done | mysql -h IpDeVotreBDD -uUtilisateur -pMotDePasse BaseDeDonnées;
-
-	# DEPLACEMENT DES FICHIERS DANS UN DOSSIER D'ARCHIVAGE
-	mv /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/Archives/$DATE.txt
-	mv /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/out-$DATE.tif /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/Archives/$DATE.tif
-
-	# RELANCER LA PRISE TOUTES LES MINUTES
-	sleep 60
-}
-
 #
 # BOUCLE DE TRAITEMENT
 #
@@ -158,10 +128,36 @@ do
 	then		
 		if [ "$valeurPrecedente" -eq 0 ]
 		then 
-			envoiBaseDeDonnee
+			valeurPrecedente="$valeurActuelle"
 		elif [ $((valeurPrecedente + valeurEcartMax)) -gt "$valeurActuelle" || "$valeurPrecedente" == "$valeurActuelle" ]
 		then 
-			envoiBaseDeDonnee
+			# REMPLACER LA VALEUR PRECEDENTE PAR L'ACTUELLE
+			valeurPrecedente="$valeurActuelle"
+
+			# NOTER LE NOM DU LOCATAIRE (ON NOMME LA MACHINE A SON NOM)	
+			echo " $hostname" >> /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt
+			# NOTER LA DATE-HEURE DE LA PRISE
+			echo " $DATE" >> /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt
+
+			# GESTION DES ESPACES INUTILES / FACILITER POUR INSERT BDD
+			contenuFichier="$(cat /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt)"
+			contenuFichierSansEspaces="$(echo -e $contenuFichier | tr -d '\v')"
+			echo $contenuFichierSansEspaces > /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt
+			cat /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt
+
+			# INSERTION DES DONNEES DANS LA BDD
+			inputfile="/home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt"
+			cat $inputfile >> "/home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/backupFile.txt"
+			cat $inputfile | while read compteur nom heure; do
+				echo "INSERT INTO Control (Me_id, Mod_id, Con_measure, Con_time, Con_image) VALUES ('$meter_id', '$module_id', '$compteur', '$heure', '$imageATraiter');"
+			done | mysql -h IpDeVotreBDD -uUtilisateur -pMotDePasse BaseDeDonnées;
+
+			# DEPLACEMENT DES FICHIERS DANS UN DOSSIER D'ARCHIVAGE
+			mv /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/output-$DATE.txt /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/Archives/$DATE.txt
+			mv /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/out-$DATE.tif /home/pi/Projet_Integration_Developpement_Durable/TDS_TraitementImage/Archives/$DATE.tif
+
+			# RELANCER LA PRISE TOUTES LES MINUTES
+			sleep 60
 		else
 			# RELANCER LA CAPTURE			
 			echo "C'EST PAS POSSIBLE"
